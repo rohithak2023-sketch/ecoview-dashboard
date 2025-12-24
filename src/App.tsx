@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import Reports from "./pages/Reports";
 import Upload from "./pages/Upload";
 import Status from "./pages/Status";
+import Install from "./pages/Install";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/install" element={<Install />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/upload" element={<Upload />} />
