@@ -1,88 +1,80 @@
+import { useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
-import { StatCard } from '@/components/dashboard/StatCard';
 import { EnergyChart } from '@/components/dashboard/EnergyChart';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
-import { 
-  generateHourlyData, 
-  generateWeeklyData, 
-  mockStats, 
-  generateRecentReadings 
-} from '@/lib/mockData';
+import { RealtimeStats } from '@/components/dashboard/RealtimeStats';
+import { LiveIndicator } from '@/components/dashboard/LiveIndicator';
+import { generateWeeklyData } from '@/lib/mockData';
 import { useAuth } from '@/contexts/AuthContext';
-import { Zap, TrendingUp, Clock, DollarSign } from 'lucide-react';
+import { useRealtimeReadings } from '@/hooks/useRealtimeReadings';
+import { startEnergySimulator, stopEnergySimulator } from '@/services/energySimulator';
 import { useMemo } from 'react';
+import { Loader2 } from 'lucide-react';
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const hourlyData = useMemo(() => generateHourlyData(), []);
+  const { readings, isLoading } = useRealtimeReadings();
   const weeklyData = useMemo(() => generateWeeklyData(), []);
-  const recentReadings = useMemo(() => generateRecentReadings(), []);
+
+  // Start simulator when dashboard mounts
+  useEffect(() => {
+    startEnergySimulator();
+    return () => stopEnergySimulator();
+  }, []);
+
+  // Transform readings for chart
+  const chartData = useMemo(() => {
+    return readings
+      .slice(0, 12)
+      .reverse()
+      .map(r => ({
+        time: new Date(r.timestamp).toLocaleTimeString('en-US', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }),
+        consumption: r.consumption
+      }));
+  }, [readings]);
 
   return (
     <DashboardLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="animate-fade-in">
-          <h1 className="text-3xl font-bold text-foreground">
-            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user?.name}
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Here's your energy consumption overview for today
-          </p>
+        <div className="animate-fade-in flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">
+              Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user?.name}
+            </h1>
+            <p className="text-muted-foreground mt-1">
+              Here's your real-time energy consumption overview
+            </p>
+          </div>
+          <LiveIndicator />
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            title="Total Consumption"
-            value={`${mockStats.totalConsumption.toLocaleString()} kWh`}
-            subtitle="This month"
-            icon={<Zap className="h-6 w-6" />}
-            trend={mockStats.trend}
-            trendLabel="vs last month"
-            delay={0}
-          />
-          <StatCard
-            title="Daily Average"
-            value={`${mockStats.dailyAverage} kWh`}
-            subtitle="Per day"
-            icon={<TrendingUp className="h-6 w-6" />}
-            trend={2.8}
-            trendLabel="vs last week"
-            delay={100}
-          />
-          <StatCard
-            title="Peak Usage"
-            value={`${mockStats.peakUsage} kWh`}
-            subtitle={`at ${mockStats.peakTime}`}
-            icon={<Clock className="h-6 w-6" />}
-            delay={200}
-          />
-          <StatCard
-            title="Est. Monthly Cost"
-            value={`$${mockStats.costEstimate.toLocaleString()}`}
-            subtitle="Based on current usage"
-            icon={<DollarSign className="h-6 w-6" />}
-            trend={-5.3}
-            trendLabel="vs last month"
-            delay={300}
-          />
-        </div>
+        {/* Real-time Stats */}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : (
+          <RealtimeStats readings={readings} />
+        )}
 
         {/* Charts Section */}
         <div className="grid gap-6 lg:grid-cols-3">
           <EnergyChart
-            data={hourlyData}
+            data={chartData}
             type="area"
             dataKey="consumption"
-            xAxisKey="hour"
-            title="Today's Energy Usage"
-            subtitle="Hourly consumption in kWh"
+            xAxisKey="time"
+            title="Live Energy Usage"
+            subtitle="Real-time consumption in kWh"
             className="lg:col-span-2 opacity-0 animate-slide-up delay-200"
             height={320}
           />
           <RecentActivity 
-            readings={recentReadings} 
+            readings={readings} 
             className="opacity-0 animate-slide-up delay-300"
           />
         </div>
