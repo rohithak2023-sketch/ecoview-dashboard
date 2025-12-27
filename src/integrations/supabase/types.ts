@@ -14,7 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      energy_readings: {
+        Row: {
+          consumption: number
+          cost: number | null
+          created_at: string
+          id: string
+          timestamp: string
+        }
+        Insert: {
+          consumption: number
+          cost?: number | null
+          created_at?: string
+          id?: string
+          timestamp?: string
+        }
+        Update: {
+          consumption?: number
+          cost?: number | null
+          created_at?: string
+          id?: string
+          timestamp?: string
+        }
+        Relationships: []
+      }
+      system_status: {
+        Row: {
+          component_name: string
+          data_points: number | null
+          id: string
+          last_update: string
+          status: string
+          uptime_percentage: number | null
+        }
+        Insert: {
+          component_name: string
+          data_points?: number | null
+          id?: string
+          last_update?: string
+          status?: string
+          uptime_percentage?: number | null
+        }
+        Update: {
+          component_name?: string
+          data_points?: number | null
+          id?: string
+          last_update?: string
+          status?: string
+          uptime_percentage?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
