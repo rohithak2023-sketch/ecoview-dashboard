@@ -8,8 +8,8 @@ export const startEnergySimulator = () => {
   // Generate initial reading immediately
   generateReading();
 
-  // Then generate a new reading every 5 seconds
-  simulatorInterval = setInterval(generateReading, 5000);
+  // Then generate a new reading every 10 minutes
+  simulatorInterval = setInterval(generateReading, 10 * 60 * 1000);
 };
 
 export const stopEnergySimulator = () => {
