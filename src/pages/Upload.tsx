@@ -1,30 +1,48 @@
 import { useState, useRef } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
-import { Navigate } from 'react-router-dom';
 import { Upload as UploadIcon, FileJson, FileSpreadsheet, CheckCircle, AlertCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
 interface UploadedFile {
+  id: string;
   name: string;
   size: number;
   type: string;
   status: 'pending' | 'uploading' | 'success' | 'error';
 }
 
+// Security constants
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILES = 10;
+const VALID_EXTENSIONS = ['.csv', '.json'];
+const VALID_MIME_TYPES = ['application/json', 'text/csv', 'application/vnd.ms-excel'];
+
+// Sanitize filename to prevent path traversal and injection attacks
+const sanitizeFilename = (filename: string): string => {
+  // Remove path components and keep only the filename
+  const baseName = filename.split(/[\\\/]/).pop() || filename;
+  // Remove potentially dangerous characters, keep only alphanumeric, dots, dashes, underscores
+  return baseName.replace(/[^a-zA-Z0-9._-]/g, '_').substring(0, 255);
+};
+
+// Validate file extension
+const hasValidExtension = (filename: string): boolean => {
+  const lowerName = filename.toLowerCase();
+  return VALID_EXTENSIONS.some(ext => lowerName.endsWith(ext));
+};
+
+// Validate MIME type
+const hasValidMimeType = (type: string): boolean => {
+  return VALID_MIME_TYPES.includes(type);
+};
+
 const Upload = () => {
-  const { user } = useAuth();
   const { toast } = useToast();
   const [files, setFiles] = useState<UploadedFile[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Only admins can access this page
-  if (user?.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />;
-  }
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -37,26 +55,66 @@ const Upload = () => {
   };
 
   const processFiles = (fileList: FileList) => {
-    const validTypes = ['application/json', 'text/csv', 'application/vnd.ms-excel'];
     const newFiles: UploadedFile[] = [];
+    const errors: string[] = [];
 
-    Array.from(fileList).forEach((file) => {
-      if (validTypes.includes(file.type) || file.name.endsWith('.csv') || file.name.endsWith('.json')) {
-        newFiles.push({
-          name: file.name,
-          size: file.size,
-          type: file.type || (file.name.endsWith('.json') ? 'application/json' : 'text/csv'),
-          status: 'pending',
-        });
-      }
-    });
-
-    if (newFiles.length === 0) {
+    // Check total file count limit
+    if (files.length + fileList.length > MAX_FILES) {
       toast({
-        title: "Invalid file type",
-        description: "Please upload CSV or JSON files only.",
+        title: "Too many files",
+        description: `Maximum ${MAX_FILES} files allowed at once.`,
         variant: "destructive",
       });
+      return;
+    }
+
+    Array.from(fileList).forEach((file) => {
+      // Validate file size
+      if (file.size > MAX_FILE_SIZE) {
+        errors.push(`${file.name}: File too large (max 10MB)`);
+        return;
+      }
+
+      // Validate file size minimum (prevent empty files)
+      if (file.size === 0) {
+        errors.push(`${file.name}: File is empty`);
+        return;
+      }
+
+      // Validate file extension
+      if (!hasValidExtension(file.name)) {
+        errors.push(`${file.name}: Invalid file type`);
+        return;
+      }
+
+      // Validate MIME type (with fallback for missing MIME)
+      if (file.type && !hasValidMimeType(file.type)) {
+        errors.push(`${file.name}: Invalid file format`);
+        return;
+      }
+
+      // Sanitize the filename
+      const sanitizedName = sanitizeFilename(file.name);
+
+      newFiles.push({
+        id: crypto.randomUUID(),
+        name: sanitizedName,
+        size: file.size,
+        type: file.type || (file.name.endsWith('.json') ? 'application/json' : 'text/csv'),
+        status: 'pending',
+      });
+    });
+
+    // Show errors if any
+    if (errors.length > 0) {
+      toast({
+        title: "Some files were rejected",
+        description: errors.slice(0, 3).join('. ') + (errors.length > 3 ? ` (+${errors.length - 3} more)` : ''),
+        variant: "destructive",
+      });
+    }
+
+    if (newFiles.length === 0) {
       return;
     }
 
@@ -67,7 +125,7 @@ const Upload = () => {
       setTimeout(() => {
         setFiles((prev) =>
           prev.map((f) =>
-            f.name === file.name ? { ...f, status: 'uploading' } : f
+            f.id === file.id ? { ...f, status: 'uploading' } : f
           )
         );
       }, index * 500);
@@ -75,7 +133,7 @@ const Upload = () => {
       setTimeout(() => {
         setFiles((prev) =>
           prev.map((f) =>
-            f.name === file.name ? { ...f, status: 'success' } : f
+            f.id === file.id ? { ...f, status: 'success' } : f
           )
         );
         toast({
@@ -100,8 +158,8 @@ const Upload = () => {
     }
   };
 
-  const removeFile = (fileName: string) => {
-    setFiles((prev) => prev.filter((f) => f.name !== fileName));
+  const removeFile = (fileId: string) => {
+    setFiles((prev) => prev.filter((f) => f.id !== fileId));
   };
 
   const formatFileSize = (bytes: number) => {
@@ -117,7 +175,7 @@ const Upload = () => {
         <div className="animate-fade-in">
           <h1 className="text-3xl font-bold text-foreground">Upload Data</h1>
           <p className="text-muted-foreground mt-1">
-            Import energy consumption data from CSV or JSON files
+            Import energy consumption data from CSV or JSON files (max 10MB each)
           </p>
         </div>
 
@@ -181,7 +239,7 @@ const Upload = () => {
             
             {files.map((file) => (
               <div
-                key={file.name}
+                key={file.id}
                 className="eco-card p-4 flex items-center justify-between"
               >
                 <div className="flex items-center gap-4">
@@ -225,7 +283,10 @@ const Upload = () => {
                   )}
                   
                   <button
-                    onClick={() => removeFile(file.name)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFile(file.id);
+                    }}
                     className="p-1 rounded-md hover:bg-muted transition-colors"
                   >
                     <X className="h-4 w-4 text-muted-foreground" />
