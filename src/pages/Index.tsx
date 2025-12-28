@@ -10,7 +10,7 @@ const Index = () => {
     if (isAuthenticated) {
       navigate('/dashboard');
     } else {
-      navigate('/login');
+      navigate('/auth');
     }
   }, [isAuthenticated, navigate]);
 
