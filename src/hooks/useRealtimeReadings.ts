@@ -1,33 +1,40 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { EnergyReading } from '@/types';
 
 export const useRealtimeReadings = () => {
   const [readings, setReadings] = useState<EnergyReading[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchReadings = useCallback(async (showRefreshing = false) => {
+    if (showRefreshing) setIsRefreshing(true);
+    
+    const { data, error } = await supabase
+      .from('energy_readings')
+      .select('*')
+      .order('timestamp', { ascending: false })
+      .limit(20);
+
+    if (error) {
+      console.error('Error fetching readings:', error);
+    } else {
+      setReadings(data?.map(r => ({
+        id: r.id,
+        timestamp: r.timestamp,
+        consumption: Number(r.consumption),
+        cost: r.cost ? Number(r.cost) : undefined
+      })) || []);
+    }
+    setIsLoading(false);
+    setIsRefreshing(false);
+  }, []);
+
+  const refresh = useCallback(() => {
+    fetchReadings(true);
+  }, [fetchReadings]);
 
   useEffect(() => {
-    // Fetch initial readings
-    const fetchReadings = async () => {
-      const { data, error } = await supabase
-        .from('energy_readings')
-        .select('*')
-        .order('timestamp', { ascending: false })
-        .limit(20);
-
-      if (error) {
-        console.error('Error fetching readings:', error);
-      } else {
-        setReadings(data?.map(r => ({
-          id: r.id,
-          timestamp: r.timestamp,
-          consumption: Number(r.consumption),
-          cost: r.cost ? Number(r.cost) : undefined
-        })) || []);
-      }
-      setIsLoading(false);
-    };
-
     fetchReadings();
 
     // Subscribe to real-time updates
@@ -56,7 +63,7 @@ export const useRealtimeReadings = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [fetchReadings]);
 
-  return { readings, isLoading };
+  return { readings, isLoading, isRefreshing, refresh };
 };

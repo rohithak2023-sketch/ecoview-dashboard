@@ -1,19 +1,20 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { EnergyChart } from '@/components/dashboard/EnergyChart';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { RealtimeStats } from '@/components/dashboard/RealtimeStats';
 import { LiveIndicator } from '@/components/dashboard/LiveIndicator';
+import { AlertSettings } from '@/components/dashboard/AlertSettings';
 import { generateWeeklyData } from '@/lib/mockData';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeReadings } from '@/hooks/useRealtimeReadings';
 import { startEnergySimulator, stopEnergySimulator } from '@/services/energySimulator';
-import { useMemo } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { readings, isLoading } = useRealtimeReadings();
+  const { readings, isLoading, isRefreshing, refresh } = useRealtimeReadings();
   const weeklyData = useMemo(() => generateWeeklyData(), []);
 
   // Start simulator when dashboard mounts
@@ -40,7 +41,7 @@ const Dashboard = () => {
     <DashboardLayout>
       <div className="space-y-8">
         {/* Header */}
-        <div className="animate-fade-in flex items-start justify-between">
+        <div className="animate-fade-in flex items-start justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
               Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user?.name}
@@ -49,7 +50,19 @@ const Dashboard = () => {
               Here's your real-time energy consumption overview
             </p>
           </div>
-          <LiveIndicator />
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={refresh}
+              disabled={isRefreshing}
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            <LiveIndicator />
+          </div>
         </div>
 
         {/* Real-time Stats */}
@@ -61,8 +74,8 @@ const Dashboard = () => {
           <RealtimeStats readings={readings} />
         )}
 
-        {/* Charts Section */}
-        <div className="grid gap-6 lg:grid-cols-3">
+        {/* Charts and Alerts Section */}
+        <div className="grid gap-6 lg:grid-cols-4">
           <EnergyChart
             data={chartData}
             type="area"
@@ -76,6 +89,9 @@ const Dashboard = () => {
           <RecentActivity 
             readings={readings} 
             className="opacity-0 animate-slide-up delay-300"
+          />
+          <AlertSettings 
+            readings={readings}
           />
         </div>
 
