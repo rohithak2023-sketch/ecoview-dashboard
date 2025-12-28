@@ -44,7 +44,7 @@ const Dashboard = () => {
         <div className="animate-fade-in flex items-start justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
-              Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {user?.name}
+              Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}
             </h1>
             <p className="text-muted-foreground mt-1">
               Here's your real-time energy consumption overview

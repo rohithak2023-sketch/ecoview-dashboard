@@ -18,18 +18,14 @@ import { useState } from 'react';
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/reports', icon: FileBarChart, label: 'Reports' },
-  { to: '/upload', icon: Upload, label: 'Upload Data', adminOnly: true },
+  { to: '/upload', icon: Upload, label: 'Upload Data' },
   { to: '/status', icon: Activity, label: 'System Status' },
 ];
 
 export const Sidebar = () => {
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
-
-  const filteredItems = navItems.filter(
-    item => !item.adminOnly || user?.role === 'admin'
-  );
 
   return (
     <aside 
@@ -53,7 +49,7 @@ export const Sidebar = () => {
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {filteredItems.map((item) => {
+        {navItems.map((item) => {
           const isActive = location.pathname === item.to;
           return (
             <NavLink
@@ -78,8 +74,8 @@ export const Sidebar = () => {
       <div className="border-t border-sidebar-border p-4">
         {!collapsed && (
           <div className="mb-3 px-2">
-            <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.name}</p>
-            <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+            <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.email}</p>
+            <p className="text-xs text-muted-foreground">Authenticated</p>
           </div>
         )}
         <Button 
@@ -88,7 +84,7 @@ export const Sidebar = () => {
             "w-full text-muted-foreground hover:text-destructive hover:bg-destructive/10",
             collapsed ? "px-3" : "justify-start"
           )}
-          onClick={logout}
+          onClick={signOut}
         >
           <LogOut className="h-4 w-4" />
           {!collapsed && <span className="ml-2">Logout</span>}
