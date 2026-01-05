@@ -1,44 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-// Get allowed origins from environment or use a restrictive default
-const getAllowedOrigins = (): string[] => {
-  const origins = Deno.env.get('ALLOWED_ORIGINS');
-  if (origins) {
-    return origins.split(',').map(o => o.trim());
-  }
-  // Default to common Lovable preview domains
-  return [
-    'https://lovable.dev',
-    'https://preview--*.lovable.app',
-    'https://*.lovable.app'
-  ];
-};
-
-const getCorsHeaders = (origin: string | null): Record<string, string> => {
-  const allowedOrigins = getAllowedOrigins();
-  
-  // Check if the origin matches any allowed pattern
-  const isAllowed = origin && allowedOrigins.some(pattern => {
-    if (pattern.includes('*')) {
-      const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
-      return regex.test(origin);
-    }
-    return pattern === origin;
-  });
-
-  return {
-    'Access-Control-Allow-Origin': isAllowed && origin ? origin : '',
-    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Vary': 'Origin'
-  };
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
 serve(async (req) => {
-  const origin = req.headers.get('origin');
-  const corsHeaders = getCorsHeaders(origin);
-
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -53,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    // Verify authorization header exists (basic auth check)
+    // Get authorization header (required for JWT validation)
     const authHeader = req.headers.get('authorization');
     if (!authHeader) {
       console.warn('Unauthorized request attempt - missing authorization header');
@@ -64,9 +33,24 @@ serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // Create client with user's JWT to respect RLS and validate token
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } }
+    });
+
+    // Verify user is authenticated and extract user ID
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      console.warn('Invalid or expired token');
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    console.log(`Authenticated user: ${user.id}`);
 
     const hour = new Date().getHours();
     
@@ -79,9 +63,11 @@ serve(async (req) => {
     const consumption = baseConsumption + (Math.random() - 0.5) * 2;
     const cost = consumption * 0.12;
 
+    // Insert reading with user_id for proper data isolation
     const { error } = await supabase
       .from('energy_readings')
       .insert({
+        user_id: user.id,
         consumption: Math.round(consumption * 100) / 100,
         cost: Math.round(cost * 100) / 100,
         timestamp: new Date().toISOString()
@@ -95,7 +81,10 @@ serve(async (req) => {
       });
     }
 
-    console.log('New reading generated:', { consumption: consumption.toFixed(2), cost: cost.toFixed(2) });
+    console.log(`New reading generated for user ${user.id}:`, { 
+      consumption: consumption.toFixed(2), 
+      cost: cost.toFixed(2) 
+    });
 
     return new Response(JSON.stringify({ success: true, consumption, cost }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
