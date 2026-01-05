@@ -8,11 +8,13 @@ import {
   LogOut,
   Leaf,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  User
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { useState } from 'react';
 
 const navItems = [
@@ -20,6 +22,7 @@ const navItems = [
   { to: '/reports', icon: FileBarChart, label: 'Reports' },
   { to: '/upload', icon: Upload, label: 'Upload Data' },
   { to: '/status', icon: Activity, label: 'System Status' },
+  { to: '/profile', icon: User, label: 'Profile' },
 ];
 
 export const Sidebar = () => {
@@ -72,12 +75,15 @@ export const Sidebar = () => {
 
       {/* User section */}
       <div className="border-t border-sidebar-border p-4">
-        {!collapsed && (
-          <div className="mb-3 px-2">
-            <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.email}</p>
-            <p className="text-xs text-muted-foreground">Authenticated</p>
-          </div>
-        )}
+        <div className={cn("flex items-center mb-3", collapsed ? "justify-center" : "justify-between")}>
+          {!collapsed && (
+            <div className="px-2 flex-1 min-w-0">
+              <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.email}</p>
+              <p className="text-xs text-muted-foreground">Authenticated</p>
+            </div>
+          )}
+          <ThemeToggle />
+        </div>
         <Button 
           variant="ghost" 
           className={cn(

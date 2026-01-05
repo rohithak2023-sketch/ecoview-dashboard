@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileBarChart, Upload, Activity } from 'lucide-react';
+import { LayoutDashboard, FileBarChart, Upload, Activity, User } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
@@ -7,6 +7,7 @@ const navItems = [
   { to: '/reports', icon: FileBarChart, label: 'Reports' },
   { to: '/upload', icon: Upload, label: 'Upload' },
   { to: '/status', icon: Activity, label: 'Status' },
+  { to: '/profile', icon: User, label: 'Profile' },
 ];
 
 export const MobileNav = () => {
@@ -22,7 +23,7 @@ export const MobileNav = () => {
               key={item.to}
               to={item.to}
               className={cn(
-                "flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition-all duration-200",
+                "flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all duration-200",
                 isActive 
                   ? "text-primary" 
                   : "text-muted-foreground"
