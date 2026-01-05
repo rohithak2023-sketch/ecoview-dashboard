@@ -54,6 +54,8 @@ const Auth = () => {
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
             toast.error('Invalid email or password');
+          } else if (error.message.includes('Failed to fetch')) {
+            toast.error('Network error. Please check your connection and try again.');
           } else {
             toast.error(error.message);
           }
@@ -70,6 +72,8 @@ const Auth = () => {
         if (error) {
           if (error.message.includes('already registered')) {
             toast.error('This email is already registered. Please login instead.');
+          } else if (error.message.includes('Failed to fetch')) {
+            toast.error('Network error. Please check your connection and try again.');
           } else {
             toast.error(error.message);
           }
@@ -79,7 +83,11 @@ const Auth = () => {
         setIsLogin(true);
       }
     } catch (error: any) {
-      toast.error('An unexpected error occurred');
+      if (error?.message?.includes('Failed to fetch')) {
+        toast.error('Network error. Please check your connection and try again.');
+      } else {
+        toast.error('An unexpected error occurred');
+      }
     } finally {
       setIsLoading(false);
     }
