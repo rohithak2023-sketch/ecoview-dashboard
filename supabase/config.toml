@@ -1,4 +1,4 @@
 project_id = "jdagpvvklzabyyeuhnzx"
 
 [functions.energy-simulator]
-verify_jwt = false
+verify_jwt = true

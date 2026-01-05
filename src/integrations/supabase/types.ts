@@ -21,6 +21,7 @@ export type Database = {
           created_at: string
           id: string
           timestamp: string
+          user_id: string
         }
         Insert: {
           consumption: number
@@ -28,6 +29,7 @@ export type Database = {
           created_at?: string
           id?: string
           timestamp?: string
+          user_id: string
         }
         Update: {
           consumption?: number
@@ -35,6 +37,7 @@ export type Database = {
           created_at?: string
           id?: string
           timestamp?: string
+          user_id?: string
         }
         Relationships: []
       }
