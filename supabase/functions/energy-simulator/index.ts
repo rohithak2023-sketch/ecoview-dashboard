@@ -7,26 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
-// Simple base64url decode function
-function base64UrlDecode(str: string): string {
-  // Replace URL-safe characters and add padding
-  const base64 = str.replace(/-/g, '+').replace(/_/g, '/');
-  const padded = base64.padEnd(base64.length + (4 - base64.length % 4) % 4, '=');
-  return atob(padded);
-}
-
-// Simple JWT payload extraction (without verification - we trust Supabase's token)
-function extractJwtPayload(token: string): { sub?: string; exp?: number } | null {
-  try {
-    const parts = token.split('.');
-    if (parts.length !== 3) return null;
-    const payload = JSON.parse(base64UrlDecode(parts[1]));
-    return payload;
-  } catch {
-    return null;
-  }
-}
-
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -44,36 +24,46 @@ serve(async (req) => {
   try {
     // Get authorization header
     const authHeader = req.headers.get('authorization');
-    if (!authHeader) {
-      console.warn('Missing authorization header');
-      return new Response(JSON.stringify({ error: 'Unauthorized - no auth header' }), {
+    if (!authHeader?.startsWith('Bearer ')) {
+      console.warn('Missing or invalid authorization header');
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     
-    // Extract JWT token from header
+    // Create client with user's token for proper JWT verification
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: { Authorization: authHeader },
+      },
+    });
+
+    // Verify JWT and extract claims using getClaims() - this cryptographically verifies the token
     const token = authHeader.replace('Bearer ', '');
+    const { data, error: claimsError } = await supabase.auth.getClaims(token);
     
-    // Decode the JWT to get the user ID
-    const payload = extractJwtPayload(token);
-    
-    if (!payload || !payload.sub) {
-      console.error('Invalid token - no user ID found');
+    if (claimsError || !data?.claims) {
+      console.error('Invalid JWT token:', claimsError?.message);
+      return new Response(JSON.stringify({ error: 'Invalid token' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    const userId = data.claims.sub;
+    if (!userId) {
+      console.error('No user ID in token claims');
       return new Response(JSON.stringify({ error: 'Invalid token - no user ID' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-    
-    const userId = payload.sub;
-    console.log(`User ID from token: ${userId}`);
-    
-    // Create service client for database operations
-    const serviceClient = createClient(supabaseUrl, supabaseServiceKey);
+
+    console.log(`Verified user: ${userId}`);
 
     const hour = new Date().getHours();
     
@@ -86,8 +76,8 @@ serve(async (req) => {
     const consumption = baseConsumption + (Math.random() - 0.5) * 2;
     const cost = consumption * 0.12;
 
-    // Insert reading with user_id for proper data isolation
-    const { error } = await serviceClient
+    // Insert reading - RLS will enforce user can only insert for themselves
+    const { error } = await supabase
       .from('energy_readings')
       .insert({
         user_id: userId,
