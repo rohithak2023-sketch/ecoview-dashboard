@@ -3,22 +3,23 @@ import {
   LayoutDashboard, 
   FileBarChart, 
   Upload, 
-  Settings, 
   Activity,
   LogOut,
   Leaf,
   ChevronLeft,
   ChevronRight,
-  User
+  User,
+  Shield
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { useUserRole } from '@/hooks/useUserRole';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 
-const navItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+const baseNavItems = [
   { to: '/reports', icon: FileBarChart, label: 'Reports' },
   { to: '/upload', icon: Upload, label: 'Upload Data' },
   { to: '/status', icon: Activity, label: 'System Status' },
@@ -27,8 +28,14 @@ const navItems = [
 
 export const Sidebar = () => {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useUserRole();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+
+  // Build nav items based on role
+  const navItems = isAdmin
+    ? [{ to: '/admin', icon: Shield, label: 'Admin Dashboard' }, ...baseNavItems]
+    : [{ to: '/user-dashboard', icon: LayoutDashboard, label: 'My Dashboard' }, ...baseNavItems];
 
   return (
     <aside 
@@ -79,7 +86,9 @@ export const Sidebar = () => {
           {!collapsed && (
             <div className="px-2 flex-1 min-w-0">
               <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.email}</p>
-              <p className="text-xs text-muted-foreground">Authenticated</p>
+              <Badge variant={isAdmin ? 'default' : 'secondary'} className="mt-1">
+                {isAdmin ? 'Admin' : 'User'}
+              </Badge>
             </div>
           )}
           <ThemeToggle />
