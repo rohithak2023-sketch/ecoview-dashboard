@@ -8,6 +8,8 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
+import UserDashboard from "./pages/UserDashboard";
 import Reports from "./pages/Reports";
 import Upload from "./pages/Upload";
 import Status from "./pages/Status";
@@ -31,6 +33,8 @@ const App = () => (
               <Route path="/login" element={<Auth />} />
               <Route path="/install" element={<Install />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/user-dashboard" element={<UserDashboard />} />
               <Route path="/reports" element={<Reports />} />
               <Route path="/upload" element={<Upload />} />
               <Route path="/status" element={<Status />} />
