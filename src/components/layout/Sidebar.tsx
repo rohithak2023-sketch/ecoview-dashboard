@@ -9,11 +9,14 @@ import {
   ChevronLeft,
   ChevronRight,
   User,
-  Shield
+  Shield,
+  Settings,
+  Users
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useDemo } from '@/contexts/DemoContext';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Badge } from '@/components/ui/badge';
@@ -26,15 +29,22 @@ const baseNavItems = [
   { to: '/profile', icon: User, label: 'Profile' },
 ];
 
+const adminNavItems = [
+  { to: '/admin', icon: Shield, label: 'Admin Dashboard' },
+  { to: '/admin/profiles', icon: Users, label: 'User Profiles' },
+  { to: '/admin/settings', icon: Settings, label: 'Settings' },
+];
+
 export const Sidebar = () => {
   const { user, signOut } = useAuth();
   const { isAdmin } = useUserRole();
+  const { isDemoMode, exitDemoMode } = useDemo();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
 
   // Build nav items based on role
   const navItems = isAdmin
-    ? [{ to: '/admin', icon: Shield, label: 'Admin Dashboard' }, ...baseNavItems]
+    ? [...adminNavItems, ...baseNavItems]
     : [{ to: '/user-dashboard', icon: LayoutDashboard, label: 'My Dashboard' }, ...baseNavItems];
 
   return (
@@ -82,27 +92,40 @@ export const Sidebar = () => {
 
       {/* User section */}
       <div className="border-t border-sidebar-border p-4">
-        <div className={cn("flex items-center mb-3", collapsed ? "justify-center" : "justify-between")}>
-          {!collapsed && (
-            <div className="px-2 flex-1 min-w-0">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.email}</p>
-              <Badge variant={isAdmin ? 'default' : 'secondary'} className="mt-1">
-                {isAdmin ? 'Admin' : 'User'}
-              </Badge>
-            </div>
-          )}
-          <ThemeToggle />
-        </div>
+        {isDemoMode ? (
+          <div className={cn("mb-3", collapsed && "text-center")}>
+            {!collapsed && (
+              <div className="px-2">
+                <p className="text-sm font-medium text-sidebar-foreground">Demo User</p>
+                <Badge variant="outline" className="mt-1 bg-amber-500/10 text-amber-600 border-amber-500/30">
+                  Demo Mode
+                </Badge>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className={cn("flex items-center mb-3", collapsed ? "justify-center" : "justify-between")}>
+            {!collapsed && (
+              <div className="px-2 flex-1 min-w-0">
+                <p className="text-sm font-medium text-sidebar-foreground truncate">{user?.email}</p>
+                <Badge variant={isAdmin ? 'default' : 'secondary'} className="mt-1">
+                  {isAdmin ? 'Admin' : 'User'}
+                </Badge>
+              </div>
+            )}
+            <ThemeToggle />
+          </div>
+        )}
         <Button 
           variant="ghost" 
           className={cn(
             "w-full text-muted-foreground hover:text-destructive hover:bg-destructive/10",
             collapsed ? "px-3" : "justify-start"
           )}
-          onClick={signOut}
+          onClick={isDemoMode ? exitDemoMode : signOut}
         >
           <LogOut className="h-4 w-4" />
-          {!collapsed && <span className="ml-2">Logout</span>}
+          {!collapsed && <span className="ml-2">{isDemoMode ? 'Exit Demo' : 'Logout'}</span>}
         </Button>
       </div>
 
