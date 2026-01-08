@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole } from '@/hooks/useUserRole';
+import { useDemo } from '@/contexts/DemoContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,13 +17,15 @@ import {
   Sparkles,
   CheckCircle2,
   Globe,
-  Leaf
+  Leaf,
+  Play
 } from 'lucide-react';
 import { useEffect } from 'react';
 
 const Index = () => {
   const { isAuthenticated, isLoading } = useAuth();
   const { isAdmin, isLoading: roleLoading } = useUserRole();
+  const { enterDemoMode } = useDemo();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,6 +37,11 @@ const Index = () => {
       }
     }
   }, [isAuthenticated, isLoading, roleLoading, isAdmin, navigate]);
+
+  const handleDemoMode = () => {
+    enterDemoMode();
+    navigate('/demo');
+  };
 
   if (isLoading) {
     return (
@@ -141,8 +149,9 @@ const Index = () => {
               Start Free Trial
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate('/auth')} className="h-14 px-8 text-lg">
-              View Live Demo
+            <Button size="lg" variant="outline" onClick={handleDemoMode} className="h-14 px-8 text-lg gap-2">
+              <Play className="h-5 w-5" />
+              Try Live Demo
             </Button>
           </div>
 
