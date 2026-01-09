@@ -11,8 +11,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserRole, AppRole } from '@/hooks/useUserRole';
 import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Users, Search, RefreshCw, Mail, Calendar, User } from 'lucide-react';
+import { Users, Search, RefreshCw, Mail, Calendar, User, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ExportDataButton } from '@/components/admin/ExportDataButton';
 
 interface Profile {
   id: string;
@@ -143,14 +144,17 @@ const AdminProfiles = () => {
               View and manage all registered user profiles
             </p>
           </div>
-          <Button 
-            variant="outline" 
-            onClick={() => window.location.reload()}
-            className="gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </Button>
+          <div className="flex gap-2">
+            <ExportDataButton type="users" />
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.reload()}
+              className="gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}

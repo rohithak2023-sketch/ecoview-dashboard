@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Mail, Lock, Moon, Sun, Loader2 } from 'lucide-react';
 import { z } from 'zod';
+import { AvatarUpload } from '@/components/profile/AvatarUpload';
 
 const passwordSchema = z.object({
   newPassword: z.string().min(6, "Password must be at least 6 characters").max(72),
@@ -27,6 +28,22 @@ const Profile = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('profiles')
+        .select('avatar_url')
+        .eq('user_id', user.id)
+        .single();
+      if (data) {
+        setAvatarUrl(data.avatar_url);
+      }
+    };
+    fetchProfile();
+  }, [user]);
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -59,11 +76,28 @@ const Profile = () => {
           <p className="text-muted-foreground">Manage your account settings and preferences</p>
         </div>
 
-        {/* User Info Card */}
+        {/* Avatar Upload */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <User className="h-5 w-5" />
+              Profile Photo
+            </CardTitle>
+            <CardDescription>Upload a profile picture</CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center py-6">
+            <AvatarUpload 
+              currentAvatarUrl={avatarUrl} 
+              onAvatarChange={setAvatarUrl}
+            />
+          </CardContent>
+        </Card>
+
+        {/* User Info Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mail className="h-5 w-5" />
               Account Information
             </CardTitle>
             <CardDescription>Your account details</CardDescription>

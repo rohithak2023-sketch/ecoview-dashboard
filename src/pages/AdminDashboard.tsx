@@ -12,6 +12,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users, Zap, Shield, Activity, RefreshCw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ExportDataButton } from '@/components/admin/ExportDataButton';
+import { AdminNotificationsWidget } from '@/components/admin/AdminNotificationsWidget';
 
 interface UserWithRole {
   user_id: string;
@@ -163,47 +165,54 @@ const AdminDashboard = () => {
               Manage users and view system-wide statistics
             </p>
           </div>
-          <Button 
-            variant="outline" 
-            onClick={() => window.location.reload()}
-            className="gap-2"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh
-          </Button>
+          <div className="flex gap-2">
+            <ExportDataButton type="users" />
+            <ExportDataButton type="energy" />
+            <Button 
+              variant="outline" 
+              onClick={() => window.location.reload()}
+              className="gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
         </div>
 
-        {/* System Stats */}
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Users</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{systemStats.totalUsers}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Readings</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{systemStats.totalReadings}</div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Consumption</CardTitle>
-              <Zap className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {systemStats.totalConsumption.toFixed(1)} kWh
-              </div>
-            </CardContent>
-          </Card>
+        {/* System Stats and Notifications */}
+        <div className="grid gap-4 lg:grid-cols-3">
+          <div className="lg:col-span-2 grid gap-4 md:grid-cols-3">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{systemStats.totalUsers}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Readings</CardTitle>
+                <Activity className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{systemStats.totalReadings}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Consumption</CardTitle>
+                <Zap className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {systemStats.totalConsumption.toFixed(1)} kWh
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <AdminNotificationsWidget />
         </div>
 
         {/* User Management */}
