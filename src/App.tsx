@@ -19,6 +19,7 @@ import Upload from "./pages/Upload";
 import Status from "./pages/Status";
 import Install from "./pages/Install";
 import Profile from "./pages/Profile";
+import Devices from "./pages/Devices";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => (
                 <Route path="/upload" element={<Upload />} />
                 <Route path="/status" element={<Status />} />
                 <Route path="/profile" element={<Profile />} />
+                <Route path="/devices" element={<Devices />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>

@@ -1,12 +1,9 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "npm:resend@2.0.0";
-
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 interface EmailRequest {
@@ -18,13 +15,6 @@ interface EmailRequest {
 }
 
 const getEmailTemplate = (type: string, message: string, data?: Record<string, unknown>) => {
-  const baseStyle = `
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px;
-  `;
-
   const headerColors: Record<string, string> = {
     test: "#3b82f6",
     high_consumption: "#f59e0b",
@@ -40,7 +30,7 @@ const getEmailTemplate = (type: string, message: string, data?: Record<string, u
   };
 
   return `
-    <div style="${baseStyle}">
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: ${headerColors[type] || "#3b82f6"}; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
         <h1 style="margin: 0; font-size: 24px;">${headerTitles[type] || "Notification"}</h1>
       </div>
@@ -48,15 +38,13 @@ const getEmailTemplate = (type: string, message: string, data?: Record<string, u
         <p style="color: #374151; font-size: 16px; line-height: 1.6;">${message}</p>
         ${data ? `<pre style="background: #e5e7eb; padding: 10px; border-radius: 4px; overflow: auto; font-size: 12px;">${JSON.stringify(data, null, 2)}</pre>` : ""}
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;" />
-        <p style="color: #6b7280; font-size: 12px;">
-          This is an automated message from your Energy Dashboard.
-        </p>
+        <p style="color: #6b7280; font-size: 12px;">This is an automated message from EcoVigil Energy Dashboard.</p>
       </div>
     </div>
   `;
 };
 
-const handler = async (req: Request): Promise<Response> => {
+serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -71,18 +59,41 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     const html = getEmailTemplate(type, message, data);
 
-    const emailResponse = await resend.emails.send({
-      from: "Energy Dashboard <onboarding@resend.dev>",
-      to: [to],
-      subject: `[Energy Dashboard] ${subject}`,
-      html,
+    if (!RESEND_API_KEY) {
+      console.log("RESEND_API_KEY not configured - logging email instead");
+      console.log(`Email: to=${to}, subject=${subject}, type=${type}`);
+      return new Response(
+        JSON.stringify({ success: true, message: "Email logged (no API key configured)", to, subject }),
+        { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${RESEND_API_KEY}`,
+      },
+      body: JSON.stringify({
+        from: "EcoVigil <onboarding@resend.dev>",
+        to: [to],
+        subject: `[EcoVigil] ${subject}`,
+        html,
+      }),
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    const responseData = await res.json();
 
-    return new Response(JSON.stringify(emailResponse), {
+    if (!res.ok) {
+      throw new Error(`Resend API error [${res.status}]: ${JSON.stringify(responseData)}`);
+    }
+
+    console.log("Email sent successfully:", responseData);
+
+    return new Response(JSON.stringify({ success: true, data: responseData }), {
       status: 200,
       headers: { "Content-Type": "application/json", ...corsHeaders },
     });
@@ -94,6 +105,4 @@ const handler = async (req: Request): Promise<Response> => {
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
   }
-};
-
-serve(handler);
+});
