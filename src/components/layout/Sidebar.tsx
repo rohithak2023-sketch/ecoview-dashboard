@@ -11,7 +11,8 @@ import {
   User,
   Shield,
   Settings,
-  Users
+  Users,
+  Wifi
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -23,6 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 
 const baseNavItems = [
+  { to: '/devices', icon: Wifi, label: 'Smart Devices' },
   { to: '/reports', icon: FileBarChart, label: 'Reports' },
   { to: '/upload', icon: Upload, label: 'Upload Data' },
   { to: '/status', icon: Activity, label: 'System Status' },

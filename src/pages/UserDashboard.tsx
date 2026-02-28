@@ -11,6 +11,7 @@ import { User, Zap, TrendingUp, Clock, RefreshCw } from 'lucide-react';
 import { RealtimeStats } from '@/components/dashboard/RealtimeStats';
 import { EnergyChart } from '@/components/dashboard/EnergyChart';
 import { LiveIndicator } from '@/components/dashboard/LiveIndicator';
+import { BillEstimation } from '@/components/dashboard/BillEstimation';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -164,6 +165,9 @@ const UserDashboard = () => {
             subtitle="Your real-time energy consumption"
           />
         )}
+
+        {/* Bill Estimation */}
+        <BillEstimation readings={readings} />
 
         {/* Tips Card */}
         <Card className="bg-primary/5 border-primary/20">

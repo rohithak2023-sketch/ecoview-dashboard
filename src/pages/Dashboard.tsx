@@ -4,6 +4,7 @@ import { EnergyChart } from '@/components/dashboard/EnergyChart';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { RealtimeStats } from '@/components/dashboard/RealtimeStats';
 import { LiveIndicator } from '@/components/dashboard/LiveIndicator';
+import { BillEstimation } from '@/components/dashboard/BillEstimation';
 import { AlertSettings } from '@/components/dashboard/AlertSettings';
 import { generateWeeklyData } from '@/lib/mockData';
 import { useAuth } from '@/contexts/AuthContext';
@@ -95,19 +96,22 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Weekly Chart */}
-        <EnergyChart
-          data={weeklyData}
-          type="bar"
-          dataKey="consumption"
-          xAxisKey="date"
-          title="Weekly Overview"
-          subtitle="Daily consumption and peak values"
-          className="opacity-0 animate-slide-up delay-400"
-          height={280}
-          showSecondary
-          secondaryKey="peak"
-        />
+        {/* Bill Estimation & Weekly Chart */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          <BillEstimation readings={readings} />
+          <EnergyChart
+            data={weeklyData}
+            type="bar"
+            dataKey="consumption"
+            xAxisKey="date"
+            title="Weekly Overview"
+            subtitle="Daily consumption and peak values"
+            className="lg:col-span-2 opacity-0 animate-slide-up delay-400"
+            height={280}
+            showSecondary
+            secondaryKey="peak"
+          />
+        </div>
       </div>
     </DashboardLayout>
   );
