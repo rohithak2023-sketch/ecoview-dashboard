@@ -1,11 +1,22 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+const ALLOWED_ORIGINS = [
+  "https://ecoviewapp.lovable.app",
+  "https://id-preview--c5390c90-c89e-4a0d-95cd-aba93f3599e5.lovable.app",
+  "http://localhost:5173",
+  "http://localhost:8080",
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get("origin") || "";
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    "Access-Control-Allow-Origin": allowedOrigin,
+    "Access-Control-Allow-Headers":
+      "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  };
+}
 
 const VALID_TYPES = ["test", "high_consumption", "new_user", "system_issue"] as const;
 
@@ -55,6 +66,8 @@ const getEmailTemplate = (type: string, message: string, data?: Record<string, u
 };
 
 serve(async (req: Request) => {
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -138,7 +151,6 @@ serve(async (req: Request) => {
 
     if (!RESEND_API_KEY) {
       console.log("RESEND_API_KEY not configured - logging email instead");
-      console.log(`Email: to=${to}, subject=${subject}, type=${type}`);
       return new Response(
         JSON.stringify({ success: true, message: "Email logged (no API key configured)", to, subject }),
         { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } }
@@ -164,8 +176,6 @@ serve(async (req: Request) => {
     if (!res.ok) {
       throw new Error(`Resend API error [${res.status}]: ${JSON.stringify(responseData)}`);
     }
-
-    console.log("Email sent successfully:", responseData);
 
     return new Response(JSON.stringify({ success: true, data: responseData }), {
       status: 200,
