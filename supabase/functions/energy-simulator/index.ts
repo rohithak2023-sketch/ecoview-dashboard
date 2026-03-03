@@ -1,19 +1,30 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
-};
+const ALLOWED_ORIGINS = [
+  'https://ecoviewapp.lovable.app',
+  'https://id-preview--c5390c90-c89e-4a0d-95cd-aba93f3599e5.lovable.app',
+  'http://localhost:5173',
+  'http://localhost:8080',
+];
+
+function getCorsHeaders(req: Request) {
+  const origin = req.headers.get('origin') || '';
+  const allowedOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+  return {
+    'Access-Control-Allow-Origin': allowedOrigin,
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  };
+}
 
 serve(async (req) => {
-  // Handle CORS preflight requests
+  const corsHeaders = getCorsHeaders(req);
+
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Only allow POST requests
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
@@ -22,10 +33,8 @@ serve(async (req) => {
   }
 
   try {
-    // Get authorization header
     const authHeader = req.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
-      console.warn('Missing or invalid authorization header');
       return new Response(JSON.stringify({ error: 'Unauthorized' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -35,19 +44,16 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     
-    // Create client with user's token for proper JWT verification
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: { Authorization: authHeader },
       },
     });
 
-    // Verify JWT and extract claims using getClaims() - this cryptographically verifies the token
     const token = authHeader.replace('Bearer ', '');
     const { data, error: claimsError } = await supabase.auth.getClaims(token);
     
     if (claimsError || !data?.claims) {
-      console.error('Invalid JWT token:', claimsError?.message);
       return new Response(JSON.stringify({ error: 'Invalid token' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -56,18 +62,14 @@ serve(async (req) => {
 
     const userId = data.claims.sub;
     if (!userId) {
-      console.error('No user ID in token claims');
       return new Response(JSON.stringify({ error: 'Invalid token - no user ID' }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log(`Verified user: ${userId}`);
-
     const hour = new Date().getHours();
     
-    // Simulate realistic consumption based on time of day
     let baseConsumption = 2.5;
     if (hour >= 6 && hour <= 9) baseConsumption = 4.5;
     if (hour >= 17 && hour <= 21) baseConsumption = 5.5;
@@ -76,7 +78,6 @@ serve(async (req) => {
     const consumption = baseConsumption + (Math.random() - 0.5) * 2;
     const cost = consumption * 0.12;
 
-    // Insert reading - RLS will enforce user can only insert for themselves
     const { error } = await supabase
       .from('energy_readings')
       .insert({
@@ -88,24 +89,18 @@ serve(async (req) => {
 
     if (error) {
       console.error('Error inserting reading:', error);
-      return new Response(JSON.stringify({ error: 'Failed to insert reading', details: error.message }), {
+      return new Response(JSON.stringify({ error: 'Failed to insert reading' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
-
-    console.log(`New reading generated for user ${userId}:`, { 
-      consumption: consumption.toFixed(2), 
-      cost: cost.toFixed(2) 
-    });
 
     return new Response(JSON.stringify({ success: true, consumption, cost }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error: unknown) {
     console.error('Error in energy-simulator function:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return new Response(JSON.stringify({ error: 'Internal server error', details: message }), {
+    return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
