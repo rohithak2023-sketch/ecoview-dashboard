@@ -12,6 +12,9 @@ import { RealtimeStats } from '@/components/dashboard/RealtimeStats';
 import { EnergyChart } from '@/components/dashboard/EnergyChart';
 import { LiveIndicator } from '@/components/dashboard/LiveIndicator';
 import { BillEstimation } from '@/components/dashboard/BillEstimation';
+import { ApplianceTracker } from '@/components/dashboard/ApplianceTracker';
+import { UsageComparisonChart } from '@/components/dashboard/UsageComparisonChart';
+import { TrendComparisonWidget } from '@/components/dashboard/TrendComparisonWidget';
 
 const UserDashboard = () => {
   const navigate = useNavigate();
@@ -168,6 +171,15 @@ const UserDashboard = () => {
 
         {/* Bill Estimation */}
         <BillEstimation readings={readings} />
+
+        {/* Usage Comparison & Trends */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <UsageComparisonChart readings={readings} />
+          <TrendComparisonWidget readings={readings} />
+        </div>
+
+        {/* Appliance Tracking */}
+        <ApplianceTracker />
 
         {/* Tips Card */}
         <Card className="bg-primary/5 border-primary/20">

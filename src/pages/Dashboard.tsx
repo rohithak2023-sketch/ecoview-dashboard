@@ -5,6 +5,9 @@ import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { RealtimeStats } from '@/components/dashboard/RealtimeStats';
 import { LiveIndicator } from '@/components/dashboard/LiveIndicator';
 import { BillEstimation } from '@/components/dashboard/BillEstimation';
+import { ApplianceTracker } from '@/components/dashboard/ApplianceTracker';
+import { UsageComparisonChart } from '@/components/dashboard/UsageComparisonChart';
+import { TrendComparisonWidget } from '@/components/dashboard/TrendComparisonWidget';
 import { AlertSettings } from '@/components/dashboard/AlertSettings';
 import { generateWeeklyData } from '@/lib/mockData';
 import { useAuth } from '@/contexts/AuthContext';
@@ -112,6 +115,15 @@ const Dashboard = () => {
             secondaryKey="peak"
           />
         </div>
+
+        {/* Usage Comparison & Trends */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <UsageComparisonChart readings={readings} />
+          <TrendComparisonWidget readings={readings} />
+        </div>
+
+        {/* Appliance Tracking */}
+        <ApplianceTracker />
       </div>
     </DashboardLayout>
   );

@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Settings, Save, RefreshCw, DollarSign, Zap, Bell, Building } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { EmailNotificationSettings } from '@/components/admin/EmailNotificationSettings';
 
 interface AdminSetting {
   id: string;
@@ -243,39 +244,8 @@ const AdminSettings = () => {
             </CardContent>
           </Card>
 
-          {/* Email Settings */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5" />
-                Notification Settings
-              </CardTitle>
-              <CardDescription>
-                Configure email and notification preferences
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label>Email Alerts</Label>
-                  <p className="text-xs text-muted-foreground">
-                    Send email notifications for threshold breaches
-                  </p>
-                </div>
-                <Switch
-                  checked={settings.email_alerts_enabled === 'true'}
-                  onCheckedChange={(checked) => 
-                    setSettings(prev => ({ ...prev, email_alerts_enabled: checked ? 'true' : 'false' }))
-                  }
-                />
-              </div>
-              {settings.email_alerts_enabled === 'true' && (
-                <p className="text-sm text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 p-3 rounded-md">
-                  ⚠️ Email alerts require additional configuration. Contact support to set up email integration.
-                </p>
-              )}
-            </CardContent>
-          </Card>
+          {/* Email Notification Settings (replaces basic toggle) */}
+          <EmailNotificationSettings />
         </div>
       </div>
     </DashboardLayout>
