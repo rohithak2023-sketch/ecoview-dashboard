@@ -38,6 +38,47 @@ export type Database = {
         }
         Relationships: []
       }
+      device_readings: {
+        Row: {
+          consumption: number
+          cost: number | null
+          created_at: string
+          device_id: string
+          duration_minutes: number
+          id: string
+          timestamp: string
+          user_id: string
+        }
+        Insert: {
+          consumption?: number
+          cost?: number | null
+          created_at?: string
+          device_id: string
+          duration_minutes?: number
+          id?: string
+          timestamp?: string
+          user_id: string
+        }
+        Update: {
+          consumption?: number
+          cost?: number | null
+          created_at?: string
+          device_id?: string
+          duration_minutes?: number
+          id?: string
+          timestamp?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "device_readings_device_id_fkey"
+            columns: ["device_id"]
+            isOneToOne: false
+            referencedRelation: "home_devices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       energy_readings: {
         Row: {
           consumption: number
@@ -62,6 +103,48 @@ export type Database = {
           id?: string
           timestamp?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      home_devices: {
+        Row: {
+          created_at: string
+          device_type: string
+          hours_per_day: number
+          icon_type: string | null
+          id: string
+          is_active: boolean
+          is_charging: boolean
+          name: string
+          updated_at: string
+          user_id: string
+          wattage: number
+        }
+        Insert: {
+          created_at?: string
+          device_type?: string
+          hours_per_day?: number
+          icon_type?: string | null
+          id?: string
+          is_active?: boolean
+          is_charging?: boolean
+          name: string
+          updated_at?: string
+          user_id: string
+          wattage?: number
+        }
+        Update: {
+          created_at?: string
+          device_type?: string
+          hours_per_day?: number
+          icon_type?: string | null
+          id?: string
+          is_active?: boolean
+          is_charging?: boolean
+          name?: string
+          updated_at?: string
+          user_id?: string
+          wattage?: number
         }
         Relationships: []
       }
