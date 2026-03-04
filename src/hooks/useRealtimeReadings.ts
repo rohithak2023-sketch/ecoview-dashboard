@@ -18,7 +18,7 @@ export const useRealtimeReadings = () => {
       .limit(20);
 
     if (error) {
-      console.error('Error fetching readings:', error);
+      logger.error('Error fetching readings:', error);
     } else {
       setReadings(data?.map(r => ({
         id: r.id,
