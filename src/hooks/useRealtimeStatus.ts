@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 interface SystemComponent {
   id: string;
@@ -23,7 +24,7 @@ export const useRealtimeStatus = () => {
         .order('component_name');
 
       if (error) {
-        console.error('Error fetching status:', error);
+        logger.error('Error fetching status:', error);
       } else {
         setComponents(data?.map(c => ({
           ...c,
@@ -47,7 +48,7 @@ export const useRealtimeStatus = () => {
           table: 'system_status'
         },
         (payload) => {
-          console.log('Status update received:', payload);
+          logger.log('Status update received:', payload);
           if (payload.eventType === 'UPDATE') {
             const newData = payload.new as SystemComponent;
             setComponents(prev => 

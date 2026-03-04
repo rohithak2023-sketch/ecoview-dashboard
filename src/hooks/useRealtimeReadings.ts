@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { EnergyReading } from '@/types';
+import { logger } from '@/utils/logger';
 
 export const useRealtimeReadings = () => {
   const [readings, setReadings] = useState<EnergyReading[]>([]);
@@ -17,7 +18,7 @@ export const useRealtimeReadings = () => {
       .limit(20);
 
     if (error) {
-      console.error('Error fetching readings:', error);
+      logger.error('Error fetching readings:', error);
     } else {
       setReadings(data?.map(r => ({
         id: r.id,
@@ -48,7 +49,7 @@ export const useRealtimeReadings = () => {
           table: 'energy_readings'
         },
         (payload) => {
-          console.log('New reading received:', payload);
+          logger.log('New reading received:', payload);
           const newReading: EnergyReading = {
             id: payload.new.id,
             timestamp: payload.new.timestamp,

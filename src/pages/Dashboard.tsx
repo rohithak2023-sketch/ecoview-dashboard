@@ -5,13 +5,14 @@ import { RecentActivity } from '@/components/dashboard/RecentActivity';
 import { RealtimeStats } from '@/components/dashboard/RealtimeStats';
 import { LiveIndicator } from '@/components/dashboard/LiveIndicator';
 import { BillEstimation } from '@/components/dashboard/BillEstimation';
-import { ApplianceTracker } from '@/components/dashboard/ApplianceTracker';
+import { HomeCurrentMonitor } from '@/components/dashboard/HomeCurrentMonitor';
 import { UsageComparisonChart } from '@/components/dashboard/UsageComparisonChart';
 import { TrendComparisonWidget } from '@/components/dashboard/TrendComparisonWidget';
 import { AlertSettings } from '@/components/dashboard/AlertSettings';
 import { generateWeeklyData } from '@/lib/mockData';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeReadings } from '@/hooks/useRealtimeReadings';
+import { useHomeDevices } from '@/hooks/useHomeDevices';
 import { startEnergySimulator, stopEnergySimulator } from '@/services/energySimulator';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import { Button } from '@/components/ui/button';
 const Dashboard = () => {
   const { user } = useAuth();
   const { readings, isLoading, isRefreshing, refresh } = useRealtimeReadings();
+  const { activeDevices, totalDailyKwh, totalMonthlyKwh, chargingDevices, currentDrawWatts } = useHomeDevices();
   const weeklyData = useMemo(() => generateWeeklyData(), []);
 
   // Start simulator when dashboard mounts
@@ -116,14 +118,14 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Usage Comparison & Trends */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          <UsageComparisonChart readings={readings} />
-          <TrendComparisonWidget readings={readings} />
-        </div>
-
-        {/* Appliance Tracking */}
-        <ApplianceTracker />
+        {/* Home Current Monitor */}
+        <HomeCurrentMonitor
+          currentDrawWatts={currentDrawWatts}
+          totalDailyKwh={totalDailyKwh}
+          totalMonthlyKwh={totalMonthlyKwh}
+          activeCount={activeDevices.length}
+          chargingCount={chargingDevices.length}
+        />
       </div>
     </DashboardLayout>
   );
