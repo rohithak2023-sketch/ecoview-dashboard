@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { logger } from '@/utils/logger';
 
 let simulatorInterval: NodeJS.Timeout | null = null;
 
