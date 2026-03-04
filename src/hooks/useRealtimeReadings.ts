@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { EnergyReading } from '@/types';
+import { logger } from '@/utils/logger';
 
 export const useRealtimeReadings = () => {
   const [readings, setReadings] = useState<EnergyReading[]>([]);
