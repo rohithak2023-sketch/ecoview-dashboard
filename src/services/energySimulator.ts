@@ -25,11 +25,11 @@ const generateReading = async () => {
     const { data, error } = await supabase.functions.invoke('energy-simulator');
     
     if (error) {
-      console.error('Error calling energy-simulator:', error);
+      logger.error('Error calling energy-simulator:', error);
     } else {
-      console.log('New reading generated via edge function:', data);
+      logger.log('New reading generated via edge function:', data);
     }
   } catch (error) {
-    console.error('Error invoking energy-simulator function:', error);
+    logger.error('Error invoking energy-simulator function:', error);
   }
 };

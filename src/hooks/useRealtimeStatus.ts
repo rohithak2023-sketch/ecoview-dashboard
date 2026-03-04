@@ -48,7 +48,7 @@ export const useRealtimeStatus = () => {
           table: 'system_status'
         },
         (payload) => {
-          console.log('Status update received:', payload);
+          logger.log('Status update received:', payload);
           if (payload.eventType === 'UPDATE') {
             const newData = payload.new as SystemComponent;
             setComponents(prev => 

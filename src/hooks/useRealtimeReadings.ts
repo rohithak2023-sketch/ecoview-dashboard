@@ -49,7 +49,7 @@ export const useRealtimeReadings = () => {
           table: 'energy_readings'
         },
         (payload) => {
-          console.log('New reading received:', payload);
+          logger.log('New reading received:', payload);
           const newReading: EnergyReading = {
             id: payload.new.id,
             timestamp: payload.new.timestamp,
