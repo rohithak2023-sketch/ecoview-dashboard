@@ -24,7 +24,7 @@ export const useRealtimeStatus = () => {
         .order('component_name');
 
       if (error) {
-        console.error('Error fetching status:', error);
+        logger.error('Error fetching status:', error);
       } else {
         setComponents(data?.map(c => ({
           ...c,
