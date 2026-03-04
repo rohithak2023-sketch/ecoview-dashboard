@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 const Dashboard = () => {
   const { user } = useAuth();
   const { readings, isLoading, isRefreshing, refresh } = useRealtimeReadings();
+  const { activeDevices, totalDailyKwh, totalMonthlyKwh, chargingDevices, currentDrawWatts } = useHomeDevices();
   const weeklyData = useMemo(() => generateWeeklyData(), []);
 
   // Start simulator when dashboard mounts
