@@ -118,14 +118,14 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Usage Comparison & Trends */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          <UsageComparisonChart readings={readings} />
-          <TrendComparisonWidget readings={readings} />
-        </div>
-
-        {/* Appliance Tracking */}
-        <ApplianceTracker />
+        {/* Home Current Monitor */}
+        <HomeCurrentMonitor
+          currentDrawWatts={currentDrawWatts}
+          totalDailyKwh={totalDailyKwh}
+          totalMonthlyKwh={totalMonthlyKwh}
+          activeCount={activeDevices.length}
+          chargingCount={chargingDevices.length}
+        />
       </div>
     </DashboardLayout>
   );
