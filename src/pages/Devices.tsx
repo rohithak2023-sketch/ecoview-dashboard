@@ -3,6 +3,9 @@ import { DeviceManager } from '@/components/dashboard/DeviceManager';
 import { HomeCurrentMonitor } from '@/components/dashboard/HomeCurrentMonitor';
 import { ChargingStatus } from '@/components/dashboard/ChargingStatus';
 import { SmartDeviceConnect } from '@/components/dashboard/SmartDeviceConnect';
+import { RegionalRates, useElectricityRate } from '@/components/dashboard/RegionalRates';
+import { SmartChargingAlerts } from '@/components/dashboard/SmartChargingAlerts';
+import { EnergyUsageReport } from '@/components/dashboard/EnergyUsageReport';
 import { useHomeDevices } from '@/hooks/useHomeDevices';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
@@ -13,9 +16,14 @@ const Devices = () => {
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const {
-    isLoading, activeDevices, totalDailyKwh, totalMonthlyKwh,
+    devices, isLoading, activeDevices, totalDailyKwh, totalMonthlyKwh,
     chargingDevices, currentDrawWatts,
   } = useHomeDevices();
+
+  const {
+    regionId, setRegionId, customRate, setCustomRate,
+    customSymbol, setCustomSymbol, ratePerKwh, symbol,
+  } = useElectricityRate();
 
   useEffect(() => {
     if (!authLoading && !user) navigate('/auth');
@@ -49,9 +57,32 @@ const Devices = () => {
             totalMonthlyKwh={totalMonthlyKwh}
             activeCount={activeDevices.length}
             chargingCount={chargingDevices.length}
+            ratePerKwh={ratePerKwh}
           />
-          <ChargingStatus chargingDevices={chargingDevices} />
+          <ChargingStatus chargingDevices={chargingDevices} ratePerKwh={ratePerKwh} />
         </div>
+
+        {/* Regional Rates + Smart Charging Alerts */}
+        <div className="grid gap-6 lg:grid-cols-2">
+          <RegionalRates
+            regionId={regionId}
+            onRegionChange={setRegionId}
+            customRate={customRate}
+            onCustomRateChange={setCustomRate}
+            customSymbol={customSymbol}
+            onCustomSymbolChange={setCustomSymbol}
+          />
+          <SmartChargingAlerts
+            chargingDevices={chargingDevices}
+            currentDrawWatts={currentDrawWatts}
+            totalDailyKwh={totalDailyKwh}
+            ratePerKwh={ratePerKwh}
+            symbol={symbol}
+          />
+        </div>
+
+        {/* Energy Usage Report */}
+        <EnergyUsageReport devices={devices} ratePerKwh={ratePerKwh} symbol={symbol} />
 
         {/* Device Manager + Smart Device Connect */}
         <div className="grid gap-6 lg:grid-cols-2">
