@@ -13,6 +13,7 @@ import { generateWeeklyData } from '@/lib/mockData';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRealtimeReadings } from '@/hooks/useRealtimeReadings';
 import { useHomeDevices } from '@/hooks/useHomeDevices';
+import { useElectricityRate } from '@/components/dashboard/RegionalRates';
 import { startEnergySimulator, stopEnergySimulator } from '@/services/energySimulator';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ const Dashboard = () => {
   const { user } = useAuth();
   const { readings, isLoading, isRefreshing, refresh } = useRealtimeReadings();
   const { activeDevices, totalDailyKwh, totalMonthlyKwh, chargingDevices, currentDrawWatts } = useHomeDevices();
+  const { ratePerKwh } = useElectricityRate();
   const weeklyData = useMemo(() => generateWeeklyData(), []);
 
   // Start simulator when dashboard mounts
@@ -125,6 +127,7 @@ const Dashboard = () => {
           totalMonthlyKwh={totalMonthlyKwh}
           activeCount={activeDevices.length}
           chargingCount={chargingDevices.length}
+          ratePerKwh={ratePerKwh}
         />
       </div>
     </DashboardLayout>
